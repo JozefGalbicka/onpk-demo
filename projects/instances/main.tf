@@ -14,40 +14,27 @@ resource "openstack_networking_port_v2" "router_ext" {
   admin_state_up = "true"
 }
 
-### NETWORK - INT
-resource "openstack_networking_network_v2" "int" {
-  name           = "internal"
-  admin_state_up = "true"
-}
-
-resource "openstack_networking_subnet_v2" "int" {
-  name       = "internal"
-  network_id = openstack_networking_network_v2.int.id
-  cidr       = "172.22.1.0/24"
-  ip_version = 4
-  #dns_nameservers = [ "8.8.8.8", "1.1.1.1" ]
-}
 
 resource "openstack_networking_port_v2" "router_int" {
   name           = "router-int"
-  network_id     = openstack_networking_network_v2.int.id
+  network_id     = module.network-internal.network_id
   #network_id     = var.network_id
 
   admin_state_up = "true"
   fixed_ip {
-    subnet_id = openstack_networking_subnet_v2.int.id
+    subnet_id = module.network-internal.subnet_id
     ip_address = "172.22.1.1"
   }
 }
 
 resource "openstack_networking_port_v2" "server_int" {
   name           = "server-int"
-  network_id     = openstack_networking_network_v2.int.id
+  network_id     = module.network-internal.network_id
   #network_id     = var.network_id
 
   admin_state_up = "true"
   fixed_ip {
-    subnet_id = openstack_networking_subnet_v2.int.id
+    subnet_id = module.network-internal.subnet_id
     ip_address = "172.22.1.10"
   }
 }
@@ -78,6 +65,12 @@ data "cloudinit_config" "user_data_server" {
     filename     = "userdata_base"
     content      = file("${path.module}/scripts/base.sh")
   }
+}
+
+module "network-internal" {
+  source      = "../../modules/network"
+  name           = "internal"
+  cidr       = "172.22.1.0/24"
 }
 
 ### INSTANCE
