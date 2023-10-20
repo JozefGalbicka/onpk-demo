@@ -8,37 +8,6 @@ data "openstack_networking_network_v2" "ext" {
   name           = "ext-net-154"
 }
 
-resource "openstack_networking_port_v2" "router_ext" {
-  name           = "router-ext"
-  network_id     = data.openstack_networking_network_v2.ext.id
-  admin_state_up = "true"
-}
-
-
-resource "openstack_networking_port_v2" "router_int" {
-  name           = "router-int"
-  network_id     = module.network-internal.network_id
-  #network_id     = var.network_id
-
-  admin_state_up = "true"
-  fixed_ip {
-    subnet_id = module.network-internal.subnet_id
-    ip_address = "172.22.1.1"
-  }
-}
-
-resource "openstack_networking_port_v2" "server_int" {
-  name           = "server-int"
-  network_id     = module.network-internal.network_id
-  #network_id     = var.network_id
-
-  admin_state_up = "true"
-  fixed_ip {
-    subnet_id = module.network-internal.subnet_id
-    ip_address = "172.22.1.10"
-  }
-}
-
 data "cloudinit_config" "user_data_router" {
   gzip          = false
   base64_encode = false
@@ -84,10 +53,25 @@ module "instance-router" {
   #key_pair_name = "glbjzf-laptop"
   key_pair_name = openstack_compute_keypair_v2.glbjzf_laptop.name
   flavor_name   = "1c05r8d"
-  port_names    = [openstack_networking_port_v2.router_int.id, openstack_networking_port_v2.router_ext.id]
   image_name        = "ubuntu-22.04-KIS"
   #image_name    = "debian-12"
   user_data     = data.cloudinit_config.user_data_router.rendered
+  ports      = [
+    {
+      name       = "router_ext"
+      network_id = data.openstack_networking_network_v2.ext.id
+    },
+    {
+      name = "router_int"
+      network_id = module.network-internal.network_id
+      fixed_ips = [
+        {
+          ip_address = "172.22.1.1"
+          subnet_id  = module.network-internal.subnet_id
+        }
+      ]
+    }
+  ]
 }
 
 module "instance-server" {
@@ -100,8 +84,15 @@ module "instance-server" {
   #key_pair_name = "glbjzf-laptop"
   key_pair_name = openstack_compute_keypair_v2.glbjzf_laptop.name
   flavor_name   = "1c05r8d"
-  port_names    = [openstack_networking_port_v2.server_int.id]
   image_name        = "ubuntu-22.04-KIS"
   #image_name    = "debian-12"
   user_data     = data.cloudinit_config.user_data_server.rendered
+  ports      = [
+    {
+      name = "server_int"
+      network_id = module.network-internal.network_id
+      ip_address = "172.22.1.10"
+      subnet_id  = module.network-internal.subnet_id
+    }
+  ]
 }

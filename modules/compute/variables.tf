@@ -1,4 +1,13 @@
-# --- compute/variables.tf ---
+variable "ports" {
+  type = list(object({
+    name       = string
+    network_id = string
+    fixed_ips  = optional(list(object({
+      ip_address = string
+      subnet_id  = string
+    })))
+  }))
+}
 
 variable "project" {
   type = string
@@ -28,10 +37,6 @@ variable "flavor_name" {
 
 variable "image_name" {
   type = string
-}
-
-variable "port_names" {
-  type = list(string)
 }
 
 # Default: ext-net (public network -> instance is connected to the public internet)

@@ -24,9 +24,24 @@ resource "openstack_compute_instance_v2" "instance" {
   user_data = var.user_data
 
   dynamic "network" {
-    for_each = var.port_names
+    for_each = openstack_networking_port_v2.instance
     content {
-      port = network.value
+      port = network.value.id
+    }
+  }
+}
+
+resource "openstack_networking_port_v2" "instance" {
+  for_each = { for port in var.ports: port.name => port }
+  name           = each.value.name
+  network_id     = each.value.network_id
+
+  admin_state_up = "true"
+  dynamic "fixed_ip" {
+    for_each = coalesce(each.value.fixed_ips, []) # https://developer.hashicorp.com/terraform/language/functions/coalesce
+    content {
+      subnet_id  = fixed_ip.value.subnet_id
+      ip_address = fixed_ip.value.ip_address
     }
   }
 }
