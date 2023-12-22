@@ -1,0 +1,50 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.services.frontend.name }}
+  {{- with .Values.services.frontend.selectorLabels }}
+  labels:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  replicas: {{ .Values.services.frontend.replicaCount }}
+  selector:
+    {{- with .Values.services.frontend.selectorLabels }}
+    matchLabels:
+      {{- toYaml . | nindent 6 }}
+    {{- end }}
+  template:
+    metadata:
+      {{- with .Values.services.frontend.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.services.frontend.selectorLabels }}
+      labels:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+    spec:
+      {{- with .Values.services.frontend.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: {{ .Values.services.frontend.name }}
+          image: {{ .Values.services.frontend.image.repository }}:{{ .Values.services.frontend.image.tag | default "latest" }}
+          imagePullPolicy: {{ .Values.services.frontend.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.services.frontend.service.port }}
+              protocol: TCP
+          {{- with .Values.services.frontend.env }}
+          env:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          livenessProbe:
+            httpGet:
+              path: /
+              port: http
+          readinessProbe:
+            httpGet:
+              path: /
+              port: http

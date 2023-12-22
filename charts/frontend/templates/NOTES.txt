@@ -1,0 +1,8 @@
+Ingress URL:
+{{- if .Values.services.frontend.ingress.enabled }}
+{{- range $host := .Values.services.frontend.ingress.hosts }}
+  {{- range .paths }}
+  http{{ if $.Values.services.frontend.ingress.tls }}s{{ end }}://{{ $host.host }}{{ .path }}
+  {{- end }}
+{{- end }}
+{{- end }}

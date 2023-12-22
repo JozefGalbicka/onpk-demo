@@ -1,0 +1,48 @@
+# Default values for webapp.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+nameOverride: ""
+fullnameOverride: ""
+
+services:
+  frontend:
+    name: frontend
+    replicaCount: 3 
+    
+    image:
+      repository: crypsde/onpk-frontend
+      pullPolicy: Always
+      # Overrides the image tag whose default is the chart appVersion.
+      tag: ""
+
+    env:
+      - name: REACT_APP_APIHOSTPORT
+        value: "backend.test.com"
+    
+    selectorLabels:
+      app: frontend
+      sejo: ejo
+    
+    imagePullSecrets: []
+    
+    podAnnotations: {}
+    
+    service:
+      type: ClusterIP
+      port: 8080
+    
+    ingress:
+      enabled: true
+      className: ""
+      annotations:
+        kubernetes.io/ingress.class: nginx
+        # kubernetes.io/tls-acme: "true"
+      hosts:
+        - host: frontend.test.com
+          paths:
+            - path: /
+              pathType: ImplementationSpecific
+      tls: []
+      #  - secretName: chart-example-tls
+      #    hosts:
+      #      - chart-example.local
