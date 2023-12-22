@@ -1,0 +1,63 @@
+apiVersion: tekton.dev/v1beta1
+kind: PipelineRun
+metadata:
+  name: clone-helm-upgrade-frontend
+  generateName: clone-helm-upgrade-frontend-
+spec:
+  pipelineRef:
+    name: clone-helm-upgrade
+  podTemplate:
+    securityContext:
+      fsGroup: 65532
+  workspaces:
+    - name: shared-data
+      volumeClaimTemplate:
+        spec:
+          accessModes:
+            - ReadWriteOnce
+          resources:
+            requests:
+              storage: 1Gi
+  params:
+    - name: repo-url
+      value: https://github.com/JozefGalbicka/onpk-terraform.git
+    - name: helm-release_name
+      value: front
+    - name: helm-charts_dir
+      value: charts/frontend
+    - name: helm-release_namespace
+      value: vote-app
+    - name: helm-upgrade_extra_params
+      value: ""
+---
+apiVersion: tekton.dev/v1beta1
+kind: PipelineRun
+metadata:
+  name: clone-helm-upgrade-backend
+  generateName: clone-helm-upgrade-backend-
+spec:
+  pipelineRef:
+    name: clone-helm-upgrade
+  podTemplate:
+    securityContext:
+      fsGroup: 65532
+  workspaces:
+    - name: shared-data
+      volumeClaimTemplate:
+        spec:
+          accessModes:
+            - ReadWriteOnce
+          resources:
+            requests:
+              storage: 1Gi
+  params:
+    - name: repo-url
+      value: https://github.com/JozefGalbicka/onpk-terraform.git
+    - name: helm-release_name
+      value: back
+    - name: helm-charts_dir
+      value: charts/backend
+    - name: helm-release_namespace
+      value: vote-app
+    - name: helm-upgrade_extra_params
+      value: "--dependency-update"
