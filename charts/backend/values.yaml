@@ -1,0 +1,120 @@
+# Default values for webapp.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+nameOverride: ""
+fullnameOverride: ""
+
+services:
+  backend:
+    name: backend
+    replicaCount: 1 
+    
+    image:
+      repository: crypsde/onpk-backend
+      pullPolicy: Always
+      # Overrides the image tag whose default is the chart appVersion.
+      tag: ""
+
+    env:
+      - name: MONGO_CONN_STR
+        value: "mongodb://mongodb:27017/maindb"
+          #value: "mongodb://mongodb:27017/maindb?authSource=maindb"
+      - name: MONGO_USERNAME
+        value: admin
+      - name: MONGO_PASSWORD
+        value: password
+    
+    selectorLabels:
+      app: backend
+    
+    imagePullSecrets: []
+    
+    podAnnotations: {}
+    
+    service:
+      type: ClusterIP
+      port: 9080
+    
+    ingress:
+      enabled: true
+      className: ""
+      annotations:
+        kubernetes.io/ingress.class: nginx
+        # kubernetes.io/tls-acme: "true"
+      hosts:
+        - host: backend.test.com
+          paths:
+            - path: /
+              pathType: ImplementationSpecific
+      tls: []
+      #  - secretName: chart-example-tls
+      #    hosts:
+      #      - chart-example.local
+      #
+
+mongodb:
+  #auth:
+  #  rootPassword: rootpassword
+  #  databases:
+  #    - maindb
+  #  usernames:
+  #    - admin
+  #  passwords:
+  #    - admin123
+
+    # https://github.com/bitnami/charts/issues/10354
+    #volumePermissions:
+    #  enabled: true
+  
+  persistence:
+    enabled: false
+
+  service:
+    nameOverride: "mongodb"
+    type: ClusterIP
+  #tls:
+  #  enabled: false
+  
+  initdbScripts:
+    init_script.js: |
+      db = db.getSiblingDB("platformsdb");
+      db.createUser({
+        user: "admin",
+        pwd: "password",
+        roles:[{role: "readWrite" , db:"platformsdb"}]
+      });
+      db.createCollection("platforms");
+      db.platforms.insertMany(
+       [
+         {
+              "name": "openshift",
+              "codedetail": {
+                  "usecase": "Container platform",
+                  "rank": 12,
+                  "homepage": "https://openshift.com",
+                  "download": "https://developers.redhat.com/products/codeready-containers/overview",
+                  "votes": 0
+              }
+          },
+          {
+              "name": "kubernetes",
+              "codedetail": {
+                  "usecase": "Container orchestration platform ",
+                  "rank": 38,
+                 "homepage": "https://kubernetes.com",
+                  "download": "https://kubernetes.io/docs/tasks/tools/install-minikube/",
+                  "votes": 0
+              }
+          },
+          {
+              "name": "rancher",
+              "codedetail": {
+                  "usecase": "Container platform management ",
+                  "rank": 50,
+                  "homepage": "https://rancher.com/",
+                  "download": "https://github.com/rancher/rancher",
+                  "votes": 0
+              }
+          }
+        ]    
+      );
