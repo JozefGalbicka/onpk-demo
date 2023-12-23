@@ -28,9 +28,21 @@ spec:
       params:
         - name: url
           value: $(params.repo-url)
+        - name: revision
+          value: main
+        - name: gitInitImage
+          value: "gcr.io/tekton-releases/github.com/tektoncd/pipeline/cmd/git-init:v0.44.5"
+    
+    - name: get-git-tag
+      runAfter: ["fetch-source"]
+      taskRef:
+        name: git-cli-get-tag
+      workspaces:
+        - name: source
+          workspace: shared-data
 
     - name: build-push
-      runAfter: ["fetch-source"]
+      runAfter: ["get-git-tag"]
       taskRef:
         name: kaniko
       workspaces:
@@ -40,7 +52,10 @@ spec:
           workspace: docker-credentials
       params:
         - name: IMAGE
-          value: $(params.image-reference)
+          value: $(params.image-reference):$(tasks.get-git-tag.results.tag)
+        - name: EXTRA_ARGS 
+          value: 
+            - "--destination=$(params.image-reference):latest"
         - name: CONTEXT
           value: $(params.image-context)
   

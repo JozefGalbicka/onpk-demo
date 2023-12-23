@@ -25,7 +25,7 @@ spec:
     - name: repo-url
       value: https://github.com/JozefGalbicka/onpk-terraform.git
     - name: image-reference
-      value: docker.io/crypsde/onpk-frontend:latest
+      value: docker.io/crypsde/onpk-frontend
     - name: image-context
       value: apps/frontend
 ---
@@ -56,6 +56,6 @@ spec:
     - name: repo-url
       value: https://github.com/JozefGalbicka/onpk-terraform.git
     - name: image-reference
-      value: docker.io/crypsde/onpk-backend:latest
+      value: docker.io/crypsde/onpk-backend
     - name: image-context
       value: apps/backend

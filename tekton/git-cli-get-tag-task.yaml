@@ -1,0 +1,53 @@
+---
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: git-cli-get-tag
+  labels:
+    app.kubernetes.io/version: "0.4"
+  annotations:
+    tekton.dev/pipelines.minVersion: "0.21.0"
+    tekton.dev/categories: Git
+    tekton.dev/tags: git
+    tekton.dev/displayName: "git cli"
+    tekton.dev/platforms: "linux/amd64,linux/s390x,linux/ppc64le"
+spec:
+  description: >-
+    This task can be used to retrieve latest git commit tag - if any.
+  workspaces:
+    - name: source
+      description: A workspace that contains the fetched git repository.
+  params:
+    - name: BASE_IMAGE
+      description: |
+        The base image for the task.
+      type: string
+      # TODO: Deprecate use of root image.
+      default: cgr.dev/chainguard/git:root-2.39@sha256:7759f87050dd8bacabe61354d75ccd7f864d6b6f8ec42697db7159eccd491139
+  results:
+    - name: tag
+      description: The commit tag, if any.
+  steps:
+    - name: git
+      image: $(params.BASE_IMAGE)
+      workingDir: $(workspaces.source.path)
+      script: |
+        #!/usr/bin/env sh
+        set -eu
+
+        git config --global --add safe.directory $(workspaces.source.path)
+        echo $(git fetch --tags 2>&1)
+        echo $(git status 2>&1)
+        COMMIT_TAG="$(git tag --points-at HEAD | head -n1)"
+        EXIT_CODE="$?"
+        if [ "$EXIT_CODE" != 0 ]
+        then
+          exit $EXIT_CODE
+        fi
+
+        if [ -z "${COMMIT_TAG}" ]; then
+          COMMIT_TAG="latest"
+        fi
+        echo "Found tag: '$COMMIT_TAG'"
+        # Make sure we don't add a trailing newline to the result!
+        printf "%s" "$COMMIT_TAG" > "$(results.tag.path)"
