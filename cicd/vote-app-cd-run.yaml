@@ -20,7 +20,7 @@ spec:
               storage: 1Gi
   params:
     - name: repo-url
-      value: https://github.com/JozefGalbicka/onpk-terraform.git
+      value: https://github.com/JozefGalbicka/onpk-demo.git
     - name: helm-release_name
       value: front
     - name: helm-charts_dir
@@ -52,7 +52,7 @@ spec:
               storage: 1Gi
   params:
     - name: repo-url
-      value: https://github.com/JozefGalbicka/onpk-terraform.git
+      value: https://github.com/JozefGalbicka/onpk-demo.git
     - name: helm-release_name
       value: back
     - name: helm-charts_dir
